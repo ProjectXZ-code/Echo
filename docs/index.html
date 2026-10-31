@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Echo — Local Music Player for Android</title>
+  <meta name="description" content="Echo is a beautiful local music player for Android with Dolby Atmos, Android Auto, lyrics, listening stats, and hi-res audio." />
+  <meta name="theme-color" content="#0a0a0a" />
+  <meta property="og:title" content="Echo — Local Music Player" />
+  <meta property="og:description" content="Hi-res audio, Dolby Atmos, Android Auto, lyrics & Spotify-style Wrapped." />
+  <meta property="og:type" content="website" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #070707;
+      --bg2: #0f0f0f;
+      --card: #141414;
+      --card2: #1a1a1a;
+      --green: #1DB954;
+      --green2: #1ed760;
+      --text: #f5f5f5;
+      --muted: #a0a0a0;
+      --line: rgba(255,255,255,0.08);
+      --radius: 20px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: Inter, system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+      overflow-x: hidden;
+    }
+    a { color: var(--green2); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ambient glow */
+    .glow {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(29,185,84,0.18), transparent 60%),
+        radial-gradient(ellipse 40% 30% at 90% 20%, rgba(80,155,245,0.08), transparent 50%),
+        radial-gradient(ellipse 40% 30% at 10% 60%, rgba(196,78,255,0.06), transparent 50%);
+    }
+
+    .wrap { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+    /* nav */
+    nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 0; gap: 16px;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 1.15rem; color: var(--text); text-decoration: none; }
+    .brand img { width: 36px; height: 36px; border-radius: 10px; }
+    .nav-links { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .nav-links a {
+      color: var(--muted); font-size: 0.9rem; font-weight: 500;
+      padding: 8px 12px; border-radius: 999px; text-decoration: none;
+    }
+    .nav-links a:hover { color: var(--text); background: rgba(255,255,255,0.06); text-decoration: none; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--green); color: #04150a !important; font-weight: 700;
+      padding: 10px 18px; border-radius: 999px; font-size: 0.9rem;
+      text-decoration: none !important; border: none; cursor: pointer;
+      transition: transform 0.15s, background 0.15s;
+    }
+    .btn:hover { background: var(--green2); transform: translateY(-1px); }
+    .btn-ghost {
+      background: transparent; color: var(--text) !important;
+      border: 1px solid var(--line); font-weight: 600;
+    }
+    .btn-ghost:hover { background: rgba(255,255,255,0.06); }
+
+    /* hero */
+    header.hero {
+      padding: 48px 0 72px;
+      display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 48px; align-items: center;
+    }
+    @media (max-width: 860px) {
+      header.hero { grid-template-columns: 1fr; padding-top: 24px; }
+      .phone { order: -1; margin: 0 auto; }
+    }
+    .badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(29,185,84,0.12); color: var(--green2);
+      border: 1px solid rgba(29,185,84,0.25);
+      font-size: 0.8rem; font-weight: 600; padding: 6px 12px; border-radius: 999px;
+      margin-bottom: 20px;
+    }
+    h1 {
+      font-size: clamp(2.4rem, 5vw, 3.6rem); font-weight: 800; letter-spacing: -0.04em;
+      line-height: 1.08; margin-bottom: 18px;
+    }
+    h1 span {
+      background: linear-gradient(135deg, #1DB954, #509BF5 60%, #C44EFF);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .lead { font-size: 1.15rem; color: var(--muted); max-width: 34em; margin-bottom: 28px; }
+    .cta { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 28px; }
+    .meta { display: flex; flex-wrap: wrap; gap: 18px; color: var(--muted); font-size: 0.85rem; }
+    .meta strong { color: var(--text); font-weight: 600; }
+
+    /* phone mock */
+    .phone {
+      width: min(280px, 100%);
+      aspect-ratio: 9/19;
+      border-radius: 36px;
+      background: linear-gradient(160deg, #1a1a1a, #0a0a0a);
+      border: 2px solid rgba(255,255,255,0.1);
+      box-shadow:
+        0 0 0 1px rgba(0,0,0,0.5),
+        0 40px 80px rgba(0,0,0,0.55),
+        0 0 60px rgba(29,185,84,0.12);
+      padding: 12px; position: relative; overflow: hidden;
+    }
+    .phone-notch {
+      position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+      width: 90px; height: 22px; background: #000; border-radius: 12px; z-index: 2;
+    }
+    .phone-screen {
+      height: 100%; border-radius: 28px; overflow: hidden;
+      background: linear-gradient(180deg, #1DB954 0%, #0d3d22 28%, #0a0a0a 55%);
+      display: flex; flex-direction: column; padding: 48px 16px 20px;
+    }
+    .phone-cover {
+      width: 70%; aspect-ratio: 1; margin: 0 auto 16px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #2a2a2a, #1DB954 120%);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.4);
+      display: grid; place-items: center;
+      font-weight: 800; font-size: 1.4rem; letter-spacing: 0.05em;
+    }
+    .phone-title { text-align: center; font-weight: 700; font-size: 1rem; }
+    .phone-artist { text-align: center; color: rgba(255,255,255,0.7); font-size: 0.8rem; margin-top: 4px; }
+    .phone-bar {
+      height: 4px; border-radius: 2px; background: rgba(255,255,255,0.15);
+      margin: 20px 8px 8px; overflow: hidden;
+    }
+    .phone-bar > i { display: block; width: 42%; height: 100%; background: var(--green); border-radius: 2px; }
+    .phone-controls {
+      display: flex; justify-content: center; align-items: center; gap: 18px; margin-top: 12px;
+    }
+    .phone-controls span {
+      width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.1);
+      display: grid; place-items: center; font-size: 0.75rem;
+    }
+    .phone-controls .play {
+      width: 52px; height: 52px; background: var(--green); color: #04150a; font-weight: 800;
+    }
+    .phone-badge {
+      margin: 14px auto 0; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em;
+      color: rgba(255,255,255,0.85); opacity: 0.9;
+    }
+
+    /* sections */
+    section { padding: 64px 0; }
+    section h2 {
+      font-size: clamp(1.6rem, 3vw, 2.1rem); font-weight: 800; letter-spacing: -0.03em;
+      margin-bottom: 12px;
+    }
+    .section-lead { color: var(--muted); max-width: 36em; margin-bottom: 36px; }
+
+    .grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+    }
+    @media (max-width: 800px) { .grid { grid-template-columns: 1fr; } }
+    @media (min-width: 801px) and (max-width: 1000px) { .grid { grid-template-columns: 1fr 1fr; } }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 24px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .card:hover { border-color: rgba(29,185,84,0.35); transform: translateY(-2px); }
+    .card .icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      display: grid; place-items: center; font-size: 1.25rem;
+      background: rgba(29,185,84,0.12); margin-bottom: 14px;
+    }
+    .card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 8px; }
+    .card p { color: var(--muted); font-size: 0.92rem; }
+
+    /* feature strip */
+    .strip {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+      margin-top: 8px;
+    }
+    @media (max-width: 700px) { .strip { grid-template-columns: 1fr 1fr; } }
+    .strip-item {
+      background: var(--card2); border-radius: 14px; padding: 16px;
+      border: 1px solid var(--line); text-align: center;
+    }
+    .strip-item strong { display: block; font-size: 1.35rem; font-weight: 800; color: var(--green2); }
+    .strip-item span { font-size: 0.8rem; color: var(--muted); }
+
+    /* steps */
+    .steps { display: grid; gap: 16px; }
+    .step {
+      display: grid; grid-template-columns: 48px 1fr; gap: 16px; align-items: start;
+      background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 18px 20px;
+    }
+    .step-num {
+      width: 40px; height: 40px; border-radius: 12px; background: rgba(29,185,84,0.15);
+      color: var(--green2); font-weight: 800; display: grid; place-items: center;
+    }
+    .step h3 { font-size: 1rem; margin-bottom: 4px; }
+    .step p { color: var(--muted); font-size: 0.9rem; }
+
+    /* code */
+    pre {
+      background: #0c0c0c; border: 1px solid var(--line); border-radius: 14px;
+      padding: 18px 20px; overflow-x: auto; font-size: 0.85rem; color: #c8e6c9;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    /* footer */
+    footer {
+      border-top: 1px solid var(--line); padding: 40px 0 56px;
+      display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px;
+      color: var(--muted); font-size: 0.9rem;
+    }
+    footer .brand { margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+  <div class="glow" aria-hidden="true"></div>
+  <div class="wrap">
+    <nav>
+      <a class="brand" href="#">
+        <img src="assets/ic_launcher_fg.png" alt="Echo" />
+        Echo
+      </a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#auto">Android Auto</a>
+        <a href="#install">Install</a>
+        <a class="btn" href="https://github.com/" id="repo-link">View on GitHub</a>
+      </div>
+    </nav>
+
+    <header class="hero">
+      <div>
+        <div class="badge">Local · Hi-Res · Privacy-first</div>
+        <h1>Your music library,<br /><span>beautifully played</span></h1>
+        <p class="lead">
+          Echo is a modern Android music player for your own files — hi-res &amp; lossless,
+          Dolby Atmos passthrough, lyrics, listening stats, and Android Auto.
+        </p>
+        <div class="cta">
+          <a class="btn" href="#install">Get started</a>
+          <a class="btn btn-ghost" href="#features">See features</a>
+        </div>
+        <div class="meta">
+          <span><strong>Kotlin</strong> · Jetpack Compose</span>
+          <span><strong>Media3</strong> playback</span>
+          <span><strong>No cloud</strong> required</span>
+        </div>
+      </div>
+      <div class="phone" aria-hidden="true">
+        <div class="phone-notch"></div>
+        <div class="phone-screen">
+          <div class="phone-cover">ECHO</div>
+          <div class="phone-title">Blinding Lights</div>
+          <div class="phone-artist">The Weeknd</div>
+          <div class="phone-bar"><i></i></div>
+          <div class="phone-controls">
+            <span>⏮</span><span>−10</span><span class="play">▶</span><span>+10</span><span>⏭</span>
+          </div>
+          <div class="phone-badge">DOLBY ATMOS</div>
+        </div>
+      </div>
+    </header>
+
+    <section id="features">
+      <h2>Everything a local player should be</h2>
+      <p class="section-lead">
+        Built for people who keep their music on-device — FLAC, hi-res, Atmos, and the rest of your library.
+      </p>
+      <div class="grid">
+        <article class="card">
+          <div class="icon">🎧</div>
+          <h3>Hi-Res &amp; lossless</h3>
+          <p>FLAC, ALAC, WAV and more with clear Hi-Res / Lossless badges on the player and library.</p>
+        </article>
+        <article class="card">
+          <div class="icon">🔊</div>
+          <h3>Dolby Atmos</h3>
+          <p>Detects Atmos / multichannel tracks, bypasses processing, and hands the stream to the system spatializer.</p>
+        </article>
+        <article class="card">
+          <div class="icon">🚗</div>
+          <h3>Android Auto + Bluetooth</h3>
+          <p>Browse songs, albums, artists, and playlists in the car. Steering-wheel controls over Bluetooth AVRCP.</p>
+        </article>
+        <article class="card">
+          <div class="icon">📝</div>
+          <h3>Synced lyrics</h3>
+          <p>Full-screen lyrics, select up to 10 lines, and share story-ready cards to Instagram and more.</p>
+        </article>
+        <article class="card">
+          <div class="icon">📊</div>
+          <h3>Listening stats &amp; Wrapped</h3>
+          <p>Spotify-style minutes for today, month, and year — plus a shareable year-end Wrapped.</p>
+        </article>
+        <article class="card">
+          <div class="icon">🖼️</div>
+          <h3>Artist photos</h3>
+          <p>Auto-fetched artist images for the library and artist pages, with album art as a reliable fallback.</p>
+        </article>
+        <article class="card">
+          <div class="icon">🎚️</div>
+          <h3>EQ &amp; spatial</h3>
+          <p>Equalizer, remaster tools for older recordings, and immersive spatial modes when you want them.</p>
+        </article>
+        <article class="card">
+          <div class="icon">🔒</div>
+          <h3>Lock screen player</h3>
+          <p>Rich controls and artwork on the lock screen, plus widgets for the home screen.</p>
+        </article>
+        <article class="card">
+          <div class="icon">📱</div>
+          <h3>Material you UI</h3>
+          <p>Jetpack Compose interface with light / dark themes and a player designed for focus while listening.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="auto">
+      <h2>Made for the car</h2>
+      <p class="section-lead">
+        USB or wireless Android Auto, plus classic Bluetooth head units.
+      </p>
+      <div class="strip">
+        <div class="strip-item"><strong>Browse</strong><span>Albums · Artists · Playlists</span></div>
+        <div class="strip-item"><strong>Control</strong><span>Play · Next · ±10s</span></div>
+        <div class="strip-item"><strong>Bluetooth</strong><span>AVRCP wheel buttons</span></div>
+        <div class="strip-item"><strong>Wireless</strong><span>Android Auto ready</span></div>
+      </div>
+    </section>
+
+    <section id="install">
+      <h2>Build &amp; run</h2>
+      <p class="section-lead">Clone the repo and open it in Android Studio.</p>
+      <div class="steps" style="margin-bottom: 24px;">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div>
+            <h3>Clone</h3>
+            <p>Get the source from GitHub.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div>
+            <h3>Open in Android Studio</h3>
+            <p>Use a recent Android Studio with JDK 17. Sync Gradle.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div>
+            <h3>Run on device</h3>
+            <p>Grant music and Bluetooth permissions when prompted.</p>
+          </div>
+        </div>
+      </div>
+      <pre><code>git clone https://github.com/YOUR_USER/Echo.git
+cd Echo
+# Open the project in Android Studio, then Run ▶</code></pre>
+    </section>
+
+    <footer>
+      <div>
+        <a class="brand" href="#">
+          <img src="assets/ic_launcher_fg.png" alt="" width="28" height="28" style="border-radius:8px" />
+          Echo
+        </a>
+        <div>Local music player for Android · Open source</div>
+      </div>
+      <div>
+        Built with Kotlin · Jetpack Compose · Media3<br />
+        <span style="opacity:0.7">Not affiliated with Dolby Laboratories or Spotify.</span>
+      </div>
+    </footer>
+  </div>
+  <script>
+    // Optional: set your real repo URL
+    // document.getElementById('repo-link').href = 'https://github.com/YOUR_USER/Echo';
+  </script>
+</body>
+</html>
